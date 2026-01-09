@@ -3,15 +3,25 @@
 // Wait for Firebase to initialize
 let firebaseReady = false;
 if (typeof firebase !== 'undefined') {
-    // Initialize app immediately even if auth sign-in fails; listeners and DB will still work
+    // Initialize app after DOM is ready so DOM refs (todoList, etc.) exist
     firebaseReady = true;
-    initializeApp();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            try { firebase.auth().signInAnonymously().catch(()=>{}); } catch(e){}
+            initializeApp();
+        });
+    } else {
+        try { firebase.auth().signInAnonymously().catch(()=>{}); } catch(e){}
+        initializeApp();
+    }
 } else {
     // Fallback if Firebase is not available
-    setTimeout(() => {
-        firebaseReady = true;
-        initializeApp();
-    }, 1000);
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            firebaseReady = true;
+            initializeApp();
+        }, 1000);
+    });
 }
 
 function initializeApp() {
