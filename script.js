@@ -3,21 +3,23 @@
 // Wait for Firebase to initialize
 let firebaseReady = false;
 if (typeof firebase !== 'undefined') {
-    firebase.auth().onAuthStateChanged(user => {
-        if (user || firebase.auth().currentUser) {
-            firebaseReady = true;
-            initializeApp();
-        }
-    });
+    // Initialize app immediately even if auth sign-in fails; listeners and DB will still work
+    firebaseReady = true;
+    initializeApp();
 } else {
     // Fallback if Firebase is not available
     setTimeout(() => {
         firebaseReady = true;
         initializeApp();
-    }, 2000);
+    }, 1000);
 }
 
 function initializeApp() {
+    // Try to sign in anonymously but don't block initialization
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        try { firebase.auth().signInAnonymously().catch(()=>{}); } catch(e){}
+    }
+
     loadTodos();
     loadItemStates();
     initItemStates();
