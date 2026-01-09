@@ -230,11 +230,11 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
-    
+    <!-- Firebase SDK (compat build) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+
     <script>
         // Firebase configuration
         const firebaseConfig = {
@@ -248,7 +248,7 @@
             databaseURL: "https://pinwinos-8e9fc-default-rtdb.firebaseio.com"
         };
 
-        // Initialize Firebase
+        // Initialize Firebase using compat API so existing code (firebase.*) works
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const auth = firebase.auth();
@@ -256,7 +256,7 @@
         // Sign in anonymously
         auth.signInAnonymously().catch(error => console.error("Auth error:", error));
     </script>
-    
+
     <script src="script.js"></script>
 </body>
 </html>
