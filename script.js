@@ -1,5 +1,29 @@
 // Consolidated script: splash modal, search, todos, animations, item states
 
+// Wait for Firebase to initialize
+let firebaseReady = false;
+if (typeof firebase !== 'undefined') {
+    firebase.auth().onAuthStateChanged(user => {
+        if (user || firebase.auth().currentUser) {
+            firebaseReady = true;
+            initializeApp();
+        }
+    });
+} else {
+    // Fallback if Firebase is not available
+    setTimeout(() => {
+        firebaseReady = true;
+        initializeApp();
+    }, 2000);
+}
+
+function initializeApp() {
+    loadTodos();
+    loadItemStates();
+    initItemStates();
+    getCustomPlans();
+}
+
 // --- Surprise Button Functionality ---
 const surpriseBtn = document.getElementById('surpriseBtn');
 
@@ -161,80 +185,83 @@ if (searchInput) {
     });
 }
 
-// --- To Do Functionality with LocalStorage ---
+// --- To Do Functionality with Firebase ---
 const todoInput = document.getElementById('todoInput');
 const todoAddBtn = document.querySelector('.todo-add-btn');
 const todoList = document.getElementById('todoList');
 
 function loadTodos() {
-    if (!todoList) return;
-    const savedTodos = localStorage.getItem('todos');
-    if (savedTodos) {
-        const todos = JSON.parse(savedTodos);
+    if (!todoList || !db) return;
+    db.ref('todos').on('value', snapshot => {
+        const data = snapshot.val();
         todoList.innerHTML = '';
-        todos.forEach(todo => {
-            const li = document.createElement('li');
-            li.className = 'todo-item';
-            li.setAttribute('data-completed', todo.completed ? 'true' : 'false');
-            li.innerHTML = `
-                <input type="checkbox" ${todo.completed ? 'checked' : ''}>
-                <span>${todo.text}</span>
-                <button class="todo-delete">✕</button>
-            `;
-            todoList.appendChild(li);
-            attachTodoListeners(li);
-        });
-    } else {
-        // attach listeners to any existing static todos in HTML
-        document.querySelectorAll('.todo-item').forEach(item => attachTodoListeners(item));
-    }
+        if (data) {
+            Object.entries(data).forEach(([key, todo]) => {
+                const li = document.createElement('li');
+                li.className = 'todo-item';
+                li.setAttribute('data-id', key);
+                li.setAttribute('data-completed', todo.completed ? 'true' : 'false');
+                li.innerHTML = `
+                    <input type="checkbox" ${todo.completed ? 'checked' : ''}>
+                    <span>${todo.text}</span>
+                    <button class="todo-delete">✕</button>
+                `;
+                todoList.appendChild(li);
+                attachTodoListeners(li, key);
+            });
+        }
+    });
 }
 
 function saveTodos() {
-    if (!document) return;
-    const todos = [];
+    if (!db) return;
+    const todos = {};
     document.querySelectorAll('.todo-item').forEach(item => {
+        const id = item.getAttribute('data-id');
         const checkbox = item.querySelector('input[type="checkbox"]');
         const span = item.querySelector('span');
-        todos.push({ text: span.textContent, completed: checkbox.checked });
+        if (id) {
+            todos[id] = { text: span.textContent, completed: checkbox.checked };
+        }
     });
-    try { localStorage.setItem('todos', JSON.stringify(todos)); } catch (e) {}
+    db.ref('todos').set(todos).catch(e => console.error('Error saving todos', e));
 }
 
 function addTodo() {
-    if (!todoInput || !todoList) return;
+    if (!todoInput || !todoList || !db) return;
     const todoText = todoInput.value.trim();
     if (todoText === '') { alert('¡Por favor escribe una tarea!'); return; }
 
-    const li = document.createElement('li');
-    li.className = 'todo-item';
-    li.setAttribute('data-completed', 'false');
-    li.innerHTML = `
-        <input type="checkbox">
-        <span>${todoText}</span>
-        <button class="todo-delete">✕</button>
-    `;
-    todoList.appendChild(li);
-    todoInput.value = '';
-    attachTodoListeners(li);
-    saveTodos();
+    const newId = 'todo-' + Date.now();
+    db.ref('todos/' + newId).set({ text: todoText, completed: false })
+        .then(() => {
+            todoInput.value = '';
+        })
+        .catch(e => console.error('Error adding todo', e));
 }
 
-function attachTodoListeners(item) {
+function attachTodoListeners(item, id) {
     if (!item) return;
     const checkbox = item.querySelector('input[type="checkbox"]');
     const deleteBtn = item.querySelector('.todo-delete');
     if (checkbox) {
         checkbox.addEventListener('change', () => {
-            item.setAttribute('data-completed', checkbox.checked);
-            saveTodos();
+            if (db && id) {
+                db.ref('todos/' + id + '/completed').set(checkbox.checked)
+                    .catch(e => console.error('Error updating todo', e));
+            }
         });
     }
     if (deleteBtn) {
         deleteBtn.addEventListener('click', () => {
             item.style.opacity = '0';
             item.style.transform = 'translateX(-20px)';
-            setTimeout(() => { item.remove(); saveTodos(); }, 300);
+            if (db && id) {
+                setTimeout(() => {
+                    db.ref('todos/' + id).remove()
+                        .catch(e => console.error('Error deleting todo', e));
+                }, 300);
+            }
         });
     }
 }
@@ -242,7 +269,7 @@ function attachTodoListeners(item) {
 if (todoAddBtn) todoAddBtn.addEventListener('click', addTodo);
 if (todoInput) todoInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTodo(); });
 
-loadTodos();
+// loadTodos() will be called from initializeApp() after Firebase is ready
 
 // --- Smooth scrolling for anchors ---
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -283,10 +310,22 @@ document.querySelectorAll('.plan-card, .memory-card').forEach(card => {
 const searchBtn = document.querySelector('.search-btn');
 if (searchBtn && searchInput) searchBtn.addEventListener('click', () => searchInput.focus());
 
-// --- Item 3-state functionality (Pendiente -> En curso -> Visto) ---
+// --- Item 3-state functionality (Pendiente -> En curso -> Visto) with Firebase ---
 const ITEM_STATE_KEY = 'itemStates';
-function loadItemStates() { try { const raw = localStorage.getItem(ITEM_STATE_KEY); return raw ? JSON.parse(raw) : {}; } catch(e){ return {}; } }
-function saveItemStates(states) { try { localStorage.setItem(ITEM_STATE_KEY, JSON.stringify(states)); } catch(e){} }
+let itemStates = {};
+
+function loadItemStates() {
+    if (!db) return itemStates;
+    db.ref('itemStates').on('value', snapshot => {
+        itemStates = snapshot.val() || {};
+    });
+    return itemStates;
+}
+
+function saveItemStates(states) {
+    if (!db) return;
+    db.ref('itemStates').set(states).catch(e => console.error('Error saving item states', e));
+}
 
 function updateItemVisual(item, state, showBadge = true) {
     item.classList.remove('state-pending', 'state-progress', 'state-seen');
@@ -307,28 +346,27 @@ function updateItemVisual(item, state, showBadge = true) {
 
 const NEXT_STATE = { 'pending': 'progress', 'progress': 'seen', 'seen': 'pending' };
 
-(function initItemStates(){
-    const states = loadItemStates();
+function initItemStates(){
     // Apply to both .item and .plan-card elements
     document.querySelectorAll('.item, .plan-card').forEach(item => {
         const id = item.dataset.id;
         if (!id) return; // skip items without id
-        const current = states[id] || 'pending';
+        const current = itemStates[id] || 'pending';
         updateItemVisual(item, current, false); // Don't show badge on load
 
         item.style.cursor = 'pointer';
         item.addEventListener('click', (e) => {
             if (e.target.closest('button')) return;
-            const prev = states[id] || 'pending';
+            const prev = itemStates[id] || 'pending';
             const next = NEXT_STATE[prev] || 'pending';
-            states[id] = next;
+            itemStates[id] = next;
             updateItemVisual(item, next, true); // Show badge on click
-            saveItemStates(states);
+            saveItemStates(itemStates);
         });
     });
-})();
+}
 
-// --- Add new movies/series functionality ---
+// --- Add new movies/series functionality with Firebase ---
 const addPlanBtn = document.getElementById('addPlanBtn');
 const addPlanModal = document.getElementById('addPlanModal');
 const closePlanModal = document.getElementById('closePlanModal');
@@ -342,20 +380,25 @@ const plansGrid = document.querySelector('.plans-grid');
 const PLANS_KEY = 'customPlans';
 
 function getCustomPlans() {
-    try {
-        const raw = localStorage.getItem(PLANS_KEY);
-        return raw ? JSON.parse(raw) : [];
-    } catch (e) {
-        return [];
-    }
+    if (!db) return [];
+    db.ref('customPlans').on('value', snapshot => {
+        const data = snapshot.val();
+        if (data) {
+            Object.entries(data).forEach(([key, plan]) => {
+                const existingCard = document.querySelector(`[data-id="${key}"]`);
+                if (!existingCard && plansGrid) {
+                    const card = createPlanCard(plan.emoji, plan.title, plan.description, key);
+                    plansGrid.appendChild(card);
+                }
+            });
+        }
+    });
+    return [];
 }
 
 function saveCustomPlans(plans) {
-    try {
-        localStorage.setItem(PLANS_KEY, JSON.stringify(plans));
-    } catch (e) {
-        console.error('Error saving plans', e);
-    }
+    if (!db) return;
+    db.ref('customPlans').set(plans).catch(e => console.error('Error saving plans', e));
 }
 
 function openPlanModal() {
@@ -409,18 +452,21 @@ function addNewPlan() {
         return;
     }
 
-    // get current custom plans and create new one
-    const customPlans = getCustomPlans();
+    if (!db || !plansGrid) return;
+
+    // create new plan with unique ID
     const newId = 'custom-' + Date.now();
-    const newPlan = { id: newId, emoji, title, description };
-    customPlans.push(newPlan);
-    saveCustomPlans(customPlans);
-
-    // add card to grid
-    const card = createPlanCard(emoji, title, description, newId);
-    plansGrid.appendChild(card);
-
-    closePlanModalFn();
+    const newPlan = { emoji, title, description };
+    
+    // save to Firebase
+    db.ref('customPlans/' + newId).set(newPlan)
+        .then(() => {
+            // add card to grid
+            const card = createPlanCard(emoji, title, description, newId);
+            plansGrid.appendChild(card);
+            closePlanModalFn();
+        })
+        .catch(e => console.error('Error adding plan', e));
 }
 
 // attach modal listeners
@@ -436,11 +482,27 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// load custom plans on page load
+// load custom plans on page load from Firebase
 (function loadCustomPlans() {
-    const customPlans = getCustomPlans();
-    customPlans.forEach(plan => {
-        const card = createPlanCard(plan.emoji, plan.title, plan.description, plan.id);
-        plansGrid.appendChild(card);
+    if (!db) return;
+    db.ref('customPlans').on('value', snapshot => {
+        const data = snapshot.val();
+        // clear existing custom cards
+        document.querySelectorAll('[data-id^="custom-"]').forEach(card => {
+            // only remove if not already in DOM with new data
+            if (!card.hasAttribute('data-firebase-loaded')) {
+                card.setAttribute('data-firebase-loaded', 'true');
+            }
+        });
+        
+        if (data) {
+            Object.entries(data).forEach(([key, plan]) => {
+                const existingCard = document.querySelector(`[data-id="${key}"]`);
+                if (!existingCard && plansGrid) {
+                    const card = createPlanCard(plan.emoji, plan.title, plan.description, key);
+                    plansGrid.appendChild(card);
+                }
+            });
+        }
     });
 })();
