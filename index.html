@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐧Pinwinitos🐧</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Modal de Inicio -->
+    <div class="splash-modal" id="splashModal">
+        <div class="splash-container">
+            <button class="splash-close" id="splashClose">✕</button>
+            <div class="splash-content">
+                <div class="splash-image-wrapper">
+                    <img src="Images/She1.jpeg" alt="Foto Especial" class="splash-image">
+                    <div class="splash-gradient"></div>
+                </div>
+                <div class="splash-info">
+                    <h1 class="splash-title">Te Amo</h1>
+                    <p class="splash-description">
+                        Así como Netflix tiene tan buenas series, yo tengo la mejor serie de todas: nuestra historia juntos.
+                    </p>
+                    <button class="splash-button" id="splashButton">Explorar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="logo">
+                <span class="logo-heart">💙</span>
+                <span class="logo-text">🐧Pinwinitos🐧</span>
+            </div>
+            <button class="surprise-btn" id="surpriseBtn">✨ ¡Aprietame! ✨</button>
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    class="search-input" 
+                    placeholder="Buscar..."
+                >
+                <button class="search-btn">🔍</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Sección Nosotros -->
+        <section id="nosotros" class="content-section">
+            <h2 class="section-title">Nosotros</h2>
+            <div class="items-grid">
+                <div class="item">
+                    <div class="item-image" style="background-image: url('Images/She2.jpeg'); background-size: cover; background-position: center;"></div>
+                    <div class="item-info">
+                        <h3>Propuesta Laboral</h3>
+                        <p>Toda guapa toda Profesional.</p>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="item-image" style="background-image: url('Images/She3.jpeg'); background-size: cover; background-position: center;"></div>
+                    <div class="item-info">
+                        <h3>El sabor de lo nuestro</h3>
+                        <p>Ñam, que rica chuleta.</p>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="item-image" style="background-image: url('Images/She7.jpeg'); background-size: cover; background-position: center;"></div>
+                    <div class="item-info">
+                        <h3>Un amor tan hermoso</h3>
+                        <p>Porque contigo todo se ha sentido increíble.</p>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="item-image" style="background-image: url('Images/She6.jpeg'); background-size: cover; background-position: center;"></div>
+                    <div class="item-info">
+                        <h3>Rolo</h3>
+                        <p>Rodolfo Lorenzo, nuestro primer hijo
+                        </p>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="item-image" style="background-image: url('Images/She9.jpeg'); background-size: cover; background-position: center;"></div>
+                    <div class="item-info">
+                        <h3>Pacho</h3>
+                        <p>Pacho el panchón :3
+                        </p>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="item-image" style="background-image: url('Images/She8.jpeg'); background-size: cover; background-position: center;"></div>
+                    <div class="item-info">
+                        <h3>Recuerdos de Juventud</h3>
+                        <p>Contigo puede mi niño salir.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección To Do -->
+        <section id="todo" class="content-section">
+            <h2 class="section-title">To Do</h2>
+            <div class="todo-container">
+                <div class="todo-input-wrapper">
+                    <input 
+                        type="text" 
+                        id="todoInput" 
+                        class="todo-input" 
+                        placeholder="Añade una nueva tarea..."
+                    >
+                    <button class="todo-add-btn">Añadir</button>
+                </div>
+                <ul id="todoList" class="todo-list"></ul>
+            </div>
+        </section>
+
+        <!-- Sección Planes -->
+        <section id="planes" class="content-section">
+            <div class="section-title-wrapper">
+                <h2 class="section-title">Series / Películas</h2>
+                <button class="add-plan-btn" id="addPlanBtn">+</button>
+            </div>
+            <div class="plans-grid">
+                <div class="plan-card" data-id="plan-1">
+                    <div class="plan-icon">🍊</div>
+                    <h3>Si la vida te da Mandarinas</h3>
+                    <p class="plan-description">Capítulo 5</p>
+                </div>
+                <div class="plan-card" data-id="plan-2">
+                    <div class="plan-icon">🌅</div>
+                    <h3>Eternal Sunshine of the Spotless Mind</h3>
+                    <p class="plan-description">Película de Jim Carrey que es densa y bonita.</p>
+                </div>
+                <div class="plan-card" data-id="plan-3">
+                    <div class="plan-icon">🍃</div>
+                    <h3>The Wind Rises</h3>
+                    <p class="plan-description">En verdad quiero ver esta contigo.</p>
+                </div>
+                <div class="plan-card" data-id="plan-4">
+                    <div class="plan-icon">🕮</div>
+                    <h3>Dead Poets Society</h3>
+                    <p class="plan-description">Frases y forma de ver la vida hermosa.</p>
+                </div>
+                <div class="plan-card" data-id="plan-5">
+                    <div class="plan-icon">🕰️</div>
+                    <h3>About time</h3>
+                    <p class="plan-description">Decisiones y viajes en el tiempo, algo que el amor puede lograr</p>
+                </div>
+                <div class="plan-card" data-id="plan-6">
+                    <div class="plan-icon">💊</div>
+                    <h3>Love and Other Drugs</h3>
+                    <p class="plan-description">Upa Upa Upa Upa (Si no sé que poner en esta)</p>
+                </div>
+                <div class="plan-card" data-id="plan-7">
+                    <div class="plan-icon">🐧</div>
+                    <h3>Frankelda
+                    </h3>
+                    <p class="plan-description">Animación hermosa, así como tú.</p>
+                </div>
+                <div class="plan-card" data-id="plan-8">
+                    <div class="plan-icon">📘</div>
+                    <h3>Good will Hunting</h3>
+                    <p class="plan-description">Robin Williams hace una reflexión sobre lo que es el amor.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Recuerdos -->
+        <section id="recuerdos" class="content-section">
+            <h2 class="section-title">Cosas que Me Recuerdan a Ti</h2>
+            <div class="memories-grid">
+                <div class="memory-card">
+                    <div class="memory-emoji">🐧</div>
+                    <h3>Pinwinos</h3>
+                    <p>Eres mi pinguino hermosa, te amo demasiado.</p>
+                </div>
+                <div class="memory-card">
+                    <div class="memory-emoji">🌻</div>
+                    <h3>Girasol</h3>
+                    <p>En general las flores, pero los girasoles son como ver tus ojitos.</p>
+                </div>
+                <div class="memory-card">
+                    <div class="memory-emoji">🌙</div>
+                    <h3>Luna</h3>
+                    <p>No lo sabes, pero incluso cuando no hablabamos le pedía a la luna por ti, que estuvieras bien :3.</p>
+                </div>
+                <div class="memory-card">
+                    <div class="memory-emoji">🎵</div>
+                    <h3>Música</h3>
+                    <p>Wiplash, PetitFellaz, Rawayana, Andres Cepeda, Imagine Dragons, Muse, entre muchas otras...</p>
+                </div>
+                <div class="memory-card">
+                    <div class="memory-emoji">💪🏻</div>
+                    <h3>Mi Novia Tiene Biceps</h3>
+                    <p>Me encanta que te cuides corazón, cada vez que entreno es para poder ser fuerte por ti.</p>
+                </div>
+                <div class="memory-card">
+                    <div class="memory-emoji">💌</div>
+                    <h3>Tu</h3>
+                    <p>Estás en cada cosa que hago mi amor, te tengo tan presente en mi, gracias por darme ese apoyo que siempre me das.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal para añadir nueva película/serie -->
+    <div class="modal-overlay hidden" id="addPlanModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closePlanModal">✕</button>
+            <h2>Añadir Nueva Serie / Película</h2>
+            <div class="form-group">
+                <label for="planEmoji">Emoji Representativo:</label>
+                <input type="text" id="planEmoji" placeholder="ej: 🎬" maxlength="2">
+            </div>
+            <div class="form-group">
+                <label for="planTitle">Título:</label>
+                <input type="text" id="planTitle" placeholder="ej: Mi película favorita">
+            </div>
+            <div class="form-group">
+                <label for="planDescription">Descripción:</label>
+                <textarea id="planDescription" placeholder="Escribe una descripción..."></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-cancel" id="cancelPlanBtn">Cancelar</button>
+                <button class="btn-save" id="savePlanBtn">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
