@@ -315,10 +315,27 @@ const ITEM_STATE_KEY = 'itemStates';
 let itemStates = {};
 
 function loadItemStates() {
-    if (!db) return itemStates;
+    if (!db) {
+        itemStates = {};
+        initItemStates();
+        return itemStates;
+    }
+
     db.ref('itemStates').on('value', snapshot => {
         itemStates = snapshot.val() || {};
+
+        // Update visuals for all existing items when states change
+        document.querySelectorAll('.item, .plan-card').forEach(item => {
+            const id = item.dataset.id;
+            if (!id) return;
+            const current = itemStates[id] || 'pending';
+            updateItemVisual(item, current, false);
+        });
+
+        // Ensure listeners are attached (idempotent)
+        initItemStates();
     });
+
     return itemStates;
 }
 
@@ -355,6 +372,8 @@ function initItemStates(){
         updateItemVisual(item, current, false); // Don't show badge on load
 
         item.style.cursor = 'pointer';
+        // avoid attaching multiple listeners
+        if (item.dataset.stateInit === 'true') return;
         item.addEventListener('click', (e) => {
             if (e.target.closest('button')) return;
             const prev = itemStates[id] || 'pending';
@@ -363,6 +382,7 @@ function initItemStates(){
             updateItemVisual(item, next, true); // Show badge on click
             saveItemStates(itemStates);
         });
+        item.dataset.stateInit = 'true';
     });
 }
 
